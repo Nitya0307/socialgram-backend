@@ -1,5 +1,8 @@
 const { Pool } = require("pg");
+
 require("dotenv").config();
+
+console.log(process.env.DB_PASSWORD);
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -10,10 +13,15 @@ const pool = new Pool({
 });
 
 pool.connect((err) => {
+
   if (err) {
+
     console.log("Database connection failed");
+
     console.log(err);
+
   } else {
+
     console.log("Database connected successfully");
   }
 });
