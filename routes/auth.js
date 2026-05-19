@@ -14,15 +14,20 @@ router.post("/signup", async (req, res) => {
 
     const { username, email, mobile, password } = req.body;
 
-    // CHECK EMAIL
+    // CHECK EXISTING USER
     const existingUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      `
+      SELECT * FROM users
+      WHERE email = $1
+      OR username = $2
+      OR mobile = $3
+      `,
+      [email, username, mobile]
     );
 
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
-        message: "Email already exists",
+        message: "User already exists",
       });
     }
 
@@ -31,20 +36,23 @@ router.post("/signup", async (req, res) => {
 
     // INSERT USER
     const newUser = await pool.query(
-      `INSERT INTO users
+      `
+      INSERT INTO users
       (username, email, mobile, password)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, username, email, mobile`,
+      RETURNING id, username, email, mobile
+      `,
       [username, email, mobile, hashedPassword]
     );
 
-    // JWT TOKEN
+    // CREATE TOKEN
     const token = jwt.sign(
       { id: newUser.rows[0].id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    // RESPONSE
     res.status(201).json({
       message: "Signup successful",
       token,
@@ -67,17 +75,23 @@ router.post("/login", async (req, res) => {
 
   try {
 
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    // FIND USER
+    // FIND USER BY EMAIL OR USERNAME OR MOBILE
     const user = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      `
+      SELECT * FROM users
+      WHERE email = $1
+      OR username = $1
+      OR mobile = $1
+      `,
+      [identifier]
     );
 
+    // USER NOT FOUND
     if (user.rows.length === 0) {
       return res.status(400).json({
-        message: "Invalid email",
+        message: "User not found",
       });
     }
 
@@ -100,6 +114,7 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    // RESPONSE
     res.json({
       message: "Login successful",
       token,
