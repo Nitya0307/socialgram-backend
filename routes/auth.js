@@ -136,4 +136,123 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
+// GOOGLE USER CHECK
+router.get("/google-user", async (req, res) => {
+
+  try {
+
+    const { email } = req.query;
+
+    const user = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE email = $1
+      `,
+      [email]
+    );
+
+    if (user.rows.length === 0) {
+
+      return res.json({
+        user: null,
+      });
+    }
+
+    res.json({
+      user: user.rows[0],
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
+
+// GOOGLE SIGNUP
+router.post("/google-signup", async (req, res) => {
+
+  try {
+
+    const {
+      username,
+      email,
+      mobile,
+      profile_pic,
+    } = req.body;
+
+    // CHECK EXISTING USER
+    const existingUser = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE email = $1
+      `,
+      [email]
+    );
+
+    if (existingUser.rows.length > 0) {
+
+      return res.json({
+        user: existingUser.rows[0],
+      });
+    }
+
+    // HASH RANDOM PASSWORD
+    const hashedPassword = await bcrypt.hash(
+      "google_oauth_user",
+      10
+    );
+
+    // INSERT USER
+    const newUser = await pool.query(
+      `
+      INSERT INTO users
+      (
+        username,
+        email,
+        mobile,
+        password,
+        profile_pic
+      )
+
+      VALUES ($1, $2, $3, $4, $5)
+
+      RETURNING
+      id,
+      username,
+      email,
+      mobile,
+      profile_pic
+      `,
+      [
+        username,
+        email,
+        mobile || "",
+        hashedPassword,
+        profile_pic || "",
+      ]
+    );
+
+    res.json({
+      user: newUser.rows[0],
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
+
 module.exports = router;
