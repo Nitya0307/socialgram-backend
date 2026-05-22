@@ -3,17 +3,20 @@ const cors = require("cors");
 
 require("dotenv").config();
 
-const authRoutes = require("./routes/auth");
-const postRoutes = require("./routes/posts");
+// ROUTES
+const authRoutes = require("./src/routes/auth.routes");
+const postRoutes = require("./src/routes/posts.routes");
 
-require("./db");
+// DATABASE
+require("./src/config/db");
 
 const app = express();
 
+// MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+// API ROUTES
 app.use("/auth", authRoutes);
 app.use("/posts", postRoutes);
 
