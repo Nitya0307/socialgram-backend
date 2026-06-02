@@ -3,6 +3,8 @@ const express = require("express");
 const {
   signup,
   login,
+  getGoogleUser,
+  googleSignup,
 } = require("../controllers/auth.controller");
 
 const router = express.Router();
@@ -11,5 +13,9 @@ const router = express.Router();
 router.post("/signup", signup);
 
 router.post("/login", login);
+
+router.get("/google-user", getGoogleUser);
+
+router.post("/google-signup", googleSignup);
 
 module.exports = router;

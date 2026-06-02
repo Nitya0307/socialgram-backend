@@ -63,8 +63,64 @@ const findUserByIdentifier = async (
   );
 };
 
+
+// GOOGLE USER
+const findGoogleUser = async (email) => {
+
+  return await pool.query(
+    `
+    SELECT *
+    FROM users
+    WHERE email = $1
+    `,
+    [email]
+  );
+};
+
+
+// GOOGLE SIGNUP
+const createGoogleUser = async ({
+  username,
+  email,
+  mobile,
+  password,
+  profile_pic,
+}) => {
+
+  return await pool.query(
+    `
+    INSERT INTO users
+    (
+      username,
+      email,
+      mobile,
+      password,
+      profile_pic
+    )
+
+    VALUES ($1, $2, $3, $4, $5)
+
+    RETURNING
+    id,
+    username,
+    email,
+    mobile,
+    profile_pic
+    `,
+    [
+      username,
+      email,
+      mobile || "",
+      password,
+      profile_pic || "",
+    ]
+  );
+};
+
 module.exports = {
   findExistingUser,
   createUser,
   findUserByIdentifier,
+  findGoogleUser,
+  createGoogleUser,
 };
